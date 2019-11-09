@@ -65,7 +65,6 @@ CREATE TABLE Cleaning (
 CREATE TABLE Noticeboard (
 	season VARCHAR(64) NOT NULL,
 	year VARCHAR(64) NOT NULL,
-	additional_key VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_Noticeboard PRIMARY KEY (
 		season,year
 	 )
@@ -255,7 +254,7 @@ ALTER TABLE TaskOfToDoList ADD CONSTRAINT fk_TaskOfToDoList_task_title FOREIGN K
 REFERENCES EmployeeAccount (login);
 
 ALTER TABLE Notice ADD CONSTRAINT fk_Notice_title FOREIGN KEY(title)
-REFERENCES Noticeboard (additional_key);
+REFERENCES Noticeboard ();
 
 ALTER TABLE Feedback ADD CONSTRAINT fk_Feedback_timestamp FOREIGN KEY(timestamp)
 REFERENCES PatientAccount (medical_insurence_number);
