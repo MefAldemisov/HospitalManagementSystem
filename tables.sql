@@ -24,9 +24,12 @@ CREATE TABLE TaskOfToDoList (
 	task_description VARCHAR(64) NOT NULL,
 	task_title VARCHAR(64) NOT NULL,
 	task_status int NOT NULL,
+	login VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_TaskOfToDoList PRIMARY KEY (
 		task_title
-	 )
+	 ),
+	CONSTRAINT fk_TaskOfToDoList_task_title FOREIGN KEY(login)
+											REFERENCES EmployeeAccount (login)
 );
 
 CREATE TABLE Security (
@@ -72,10 +75,14 @@ CREATE TABLE Noticeboard (
 
 CREATE TABLE Notice (
 	title VARCHAR(64) NOT NULL,
+	season VARCHAR(64) NOT NULL,
+	year VARCHAR(64) NOT NULL,
 	content VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_Notice PRIMARY KEY (
-		title
-	 )
+		title,season,year
+	),
+	CONSTRAINT fk_Notice_title FOREIGN KEY(season,year) 
+							   REFERENCES Noticeboard (season,year)
 );
 
 CREATE TABLE StaffsTimetable (
@@ -128,9 +135,13 @@ CREATE TABLE Feedback (
 	title VARCHAR(64) NOT NULL,
 	content VARCHAR(64) NOT NULL,
 	timestamp VARCHAR(64) NOT NULL,
+	medical_insurence_number int NOT NULL,
 	CONSTRAINT pk_Feedback PRIMARY KEY (
 		timestamp
-	 )
+	 ),
+	CONSTRAINT fk_Feedback_timestamp FOREIGN KEY(medical_insurence_number) 
+									 REFERENCES PatientAccount (medical_insurence_number)
+
 );
 
 CREATE TABLE Nurse (
@@ -250,11 +261,6 @@ CREATE TABLE RequestForMeds (
 );
 
 
-ALTER TABLE TaskOfToDoList ADD CONSTRAINT fk_TaskOfToDoList_task_title FOREIGN KEY(task_title)
-REFERENCES EmployeeAccount (login);
+-- ALTER TABLE TaskOfToDoList ADD CONSTRAINT fk_TaskOfToDoList_task_title FOREIGN KEY(task_title)
+-- REFERENCES EmployeeAccount (login);
 
-ALTER TABLE Notice ADD CONSTRAINT fk_Notice_title FOREIGN KEY(title)
-REFERENCES Noticeboard ();
-
-ALTER TABLE Feedback ADD CONSTRAINT fk_Feedback_timestamp FOREIGN KEY(timestamp)
-REFERENCES PatientAccount (medical_insurence_number);
