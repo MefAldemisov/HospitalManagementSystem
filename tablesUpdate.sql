@@ -233,7 +233,7 @@ CREATE TABLE CreateRecipe (
 
 -- multi attribute
 CREATE TABLE Department (
-	list_of_rooms INTEGER[],
+	list_of_rooms INTEGER[] NOT NULL,
 	department_name VARCHAR(512) NOT NULL,
 	CONSTRAINT pk_Department PRIMARY KEY (
 		department_name
