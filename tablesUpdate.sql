@@ -175,6 +175,18 @@ CREATE TABLE Nurse (
 	employee_account VARCHAR(16) REFERENCES EmployeeAccount(login)
 );
 
+
+CREATE TABLE Doctor (
+	SSN VARCHAR(9) NOT NULL,
+	is_on_training BOOLEAN NOT NULL,
+	date_of_the_last_training DATE NOT NULL,
+	CONSTRAINT pk_Doctor PRIMARY KEY (
+		SSN
+	 ),
+	employee_account VARCHAR(16) REFERENCES EmployeeAccount(login),
+	head_of_deaprtment VARCHAR(9) REFERENCES HeadOfDepartment(SSN)
+);
+
 -- relationship
 CREATE TABLE SendMedicalReport (
 	details VARCHAR(2048) NOT NULL,
@@ -207,16 +219,6 @@ CREATE TABLE Contacts (
 	it_specialist VARCHAR(9) REFERENCES ITSpecialist(SSN)
 );
 
-CREATE TABLE Doctor (
-	SSN VARCHAR(9) NOT NULL,
-	is_on_training BOOLEAN NOT NULL,
-	date_of_the_last_training DATE NOT NULL,
-	CONSTRAINT pk_Doctor PRIMARY KEY (
-		SSN
-	 ),
-	employee_account VARCHAR(16) REFERENCES EmployeeAccount(login),
-	head_of_deaprtment VARCHAR(9) REFERENCES HeadOfDepartment(SSN)
-);
 
 -- relationship
 CREATE TABLE CreateRecipe (
