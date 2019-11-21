@@ -6,7 +6,6 @@ CREATE TABLE EmployeeAccount (
 	surname VARCHAR(64) NOT NULL,
 	name VARCHAR(64) NOT NULL,
 	phone VARCHAR(11) NOT NULL,
-	email VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_EmployeeAccount PRIMARY KEY (
 		email
 	 )
@@ -50,7 +49,7 @@ CREATE TABLE ManageTask (
 	manage_task_timestamp TIMESTAMP NOT NULL,
 	task_of_todo_list VARCHAR(512) REFERENCES TaskOfToDoList(task_title),
 	employee_account VARCHAR(16) REFERENCES EmployeeAccount(email)
-)
+);
 
 CREATE TABLE Security (
 	SSN VARCHAR(9) NOT NULL,
@@ -115,7 +114,7 @@ CREATE TABLE EditNotice (
 	edit_notice_timestamp TIMESTAMP NOT NULL,
 	head_of_department VARCHAR(9) REFERENCES HeadOfDepartment(SSN),
 	noticeboard SMALLINT REFERENCES Noticeboard(season)
-)
+);
 
 CREATE TABLE StaffsTimetable (
 	month SMALLINT NOT NULL,
@@ -267,7 +266,7 @@ CREATE TABLE EditPatientTimetable (
 	edit_patient_timetable_timestamp TIMESTAMP NOT NULL,
 	head_of_department VARCHAR(9) REFERENCES HeadOfDepartment(SSN),
 	patient_timetable VARCHAR(4) REFERENCES PatientTimetable(year)
-)
+);
 
 CREATE TABLE CreateAppointment (
 	appointment_timestamp TIMESTAMP NOT NULL,
@@ -305,7 +304,7 @@ CREATE TABLE ManageMedicine (
 	manage_medicine_timestamp TIMESTAMP NOT NULL,
 	pharmacist VARCHAR(9) REFERENCES Pharmacist(SSN),
 	medicine VARCHAR(16) REFERENCES Medicine(medicine_id)
-)
+);
 
 CREATE TABLE ChangePrice (
 	change_price_change_log VARCHAR(256) NOT NULL,
