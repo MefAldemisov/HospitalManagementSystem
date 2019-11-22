@@ -23,6 +23,7 @@ CREATE TABLE PatientAccount (
 	password VARCHAR(16) NOT NULL,
 	surname VARCHAR(64) NOT NULL,
 	name VARCHAR(64) NOT NULL,
+	date_of_birth DATE NOT NULL,
 	phone VARCHAR(11) NOT NULL,
 	email VARCHAR(64) NOT NULL,
 	medical_insurence_number INTEGER NOT NULL,
