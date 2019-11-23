@@ -2,7 +2,6 @@
 # coding: utf-8
 
 # # Generation of SQL code to fill BD
-
 import re
 import names
 import string 
@@ -12,11 +11,9 @@ import random
 from datetime import datetime, timedelta
 import numpy as np
 
-# open file
 file = open("tablesUpdate.sql", "r")
 full_text = file.read()
 
-# data preparation
 commands = full_text.split(";")
 tables = {}
 
@@ -24,7 +21,6 @@ primary_key_expr = re.compile("PRIMARY KEY")
 partial_key_expr = re.compile("FOREIGN KEY")
 reference_expr = re.compile("REFERENCES")
         
-# for all commands (instructions, separated by ;)
 for command in commands:
     try:
         table_name = command.split("CREATE TABLE")[1].split()[0]
@@ -69,6 +65,9 @@ for command in commands:
             # add to array of exclusions
             if partial_key_expr.search(cs):
                 partial_keys = ref_columns
+            else: # add such column
+                table_col += [cs.split("REFERENCES")[0].split()[:2]]
+                
         else:
             table_col += [splited]
         
@@ -161,17 +160,6 @@ def getRandomBool():
     if random.randint(0, 1): return "true"
     return "false"
 
-def getListOfRooms():
-    '''
-    Returns string 
-    "ARRAY [{list}]", where list - sequence of numbers 
-    from MIN_ROOM to MAX_ROOM of length from 1 to 6
-    '''
-    amount = np.random.randint(1, 6)
-    result = [str(np.random.randint(MIN_ROOM, MAX_ROOM)) for x in range(amount)]
-    result = ", ".join(result)
-    result = "ARRAY [" + result + "]"
-    return result
 
 def getRandomMoney():
     '''
@@ -180,16 +168,13 @@ def getRandomMoney():
     '''
     return np.random.randint(0, 10**6)/100
 
-# dictionary of predefined fucions for some freuent column names
-
-
 special_types = {"name":     lambda: getRandomName(), 
                  "surname":  lambda: getRandomSurname(), 
                  "email":    lambda: getRandomEmail(), 
-                 "phone":    lambda: getRandomPhone(),
-                 "SSN":      lambda: np.random.randint(10**9, 10**10),                  # 8 digits long
-                 "medical_insurence_number": lambda: np.random.randint(10**16, 10**17), # 16 digits long
-                 "year":     lambda: np.random.randint(MIN_YEAR, 2019), 
+                 "phone":    lambda: str(getRandomPhone()),
+                 "SSN":      lambda: str(np.random.randint(10**8, 10**9)),                   # 8 digits long
+                 "medical_insurence_number": lambda: np.random.randint(10**15, 10**16),      # 16 digits long
+                 "year":     lambda: str(np.random.randint(MIN_YEAR, 2019)), 
                  "season":   lambda: np.random.randint(1, 5), 
                  "month":    lambda: np.random.randint(1, 13),
                  "room":     lambda: np.random.randint(MIN_ROOM, MAX_ROOM),
@@ -197,15 +182,17 @@ special_types = {"name":     lambda: getRandomName(),
                  "priority": lambda: np.random.randint(0, 10),
                  "login":    lambda: getRandomStringNoSpace(16), 
                  "password": lambda: getRandomStringNoSpace(16),
-                 "list_of_rooms": lambda: getListOfRooms()
+                 "add_fire_flag": lambda: np.random.randint(0, 1),
                 }
 
 # dictionary for includes
 
-include_types = {"DATE":     lambda: getRandomDate(), 
-                 "BOOLEAN":  lambda: getRandomBool(), 
+include_types = {"DATE":     lambda: str(getRandomDate()), 
+                 "BOOLEAN":  lambda: str(getRandomBool()), 
                  "MONEY":    lambda: getRandomMoney()
                 }
+
+
 
 MAIN_STR = ""
 BD = {} # yes, it's possible to create even worse
@@ -218,10 +205,6 @@ def appendInsert(tableName, columns, values):
     
     "INSERT INTO {}({})\nVALUES ({});\n\n"
     '''
-    global MAIN_STR
-    str_columns, str_rows = ", ".join(columns[:-1]), ", ".join(values[:-1])
-    MAIN_STR += 'INSERT INTO {}({})\nVALUES ({});\n\n'.format(tableName, str_columns, str_rows)
-    
     global BD
     for col, val in zip(columns, values):
         if tableName not in BD.keys():
@@ -229,12 +212,19 @@ def appendInsert(tableName, columns, values):
         if col not in BD[tableName].keys():
             BD[tableName][col] = [val]
         BD[tableName][col].append(val)
+        
+    global MAIN_STR
+    values = ["\'" + val +"\'" if type(val) == str else str(val) for val in values]
+    
+    str_columns, str_rows = ", ".join(columns[:-1]), ", ".join(values[:-1])
+    MAIN_STR += 'INSERT INTO {}({})\nVALUES ({});\n\n'.format(tableName, str_columns, str_rows)
 
 def getValueToInsert(column):
     
     varchar = re.compile("VARCHAR")
     timestamp = re.compile("timestamp")
     integer = re.compile("INTEGER")
+    ssn = re.compile("SSN")
     
     val = "__" # default value
 
@@ -243,7 +233,8 @@ def getValueToInsert(column):
     # if special column name
     if column[0] in special_types.keys():  
         val = special_types[column[0]]()
-
+    elif ssn.search(column[0]):
+        val = special_types["SSN"]()
         
     # if special dt
     elif column[1] in include_types.keys():
@@ -251,7 +242,7 @@ def getValueToInsert(column):
 
     # if TIMESTAMP
     elif timestamp.search(column[0]):
-        val = getRandomDateTime()
+        val = str(getRandomDateTime())
 
     # if VARCHAR(n)
     elif varchar.search(column[1]):
@@ -265,7 +256,8 @@ def getValueToInsert(column):
     # check if everything is filled
     if val=='__':
         print ("Alert!", column, key)
-    return str(val)
+    return val
+
 
 # introduction to KOSTILI:
 # in any table ther is a column FULL_KEY (reserved column name), with stucked key values
@@ -282,15 +274,21 @@ def generateKey(table, column_names, keys):
         key_val.append(val)
     return key_val
 
-#  main generation loop
+
 for table_name in tables.keys():
     # data for table     
     
     table = tables[table_name]["columns"]
-    column_names = [column[0] for column in table] # names of usuall columns
+    column_names = [column[0] for column in table] # names of usuall columns + partial_keys
     
     refs = tables[table_name]["ref"]
-    keys = tables[table_name]["keys"]
+    all_keys = tables[table_name]["keys"]
+    
+    keys = []
+    for k in all_keys:
+        if k not in refs.keys():
+            keys.append(k)
+            
     part_k = tables[table_name]["partial_keys"]
     
     for row in range(100):
@@ -298,19 +296,29 @@ for table_name in tables.keys():
         # fill connected columns
         ref_col, ref_val = [], []
         if len(refs) > 0:
+            # in case when many referencing values are from the same column
+            mentioned_tables = {}
             for k in refs.keys():
-                col, val = k, np.random.choice(BD[refs[k]][k])
-                ref_col.append(col)
+                
+                ref_table_name = refs[k]
+                
+                if ref_table_name not in mentioned_tables.keys():
+                    row_index = np.random.randint(0, len(BD[ref_table_name][k])-1)
+                    mentioned_tables[ref_table_name] = row_index
+                
+                val = BD[ref_table_name][k][mentioned_tables[ref_table_name]]
+                    
+                ref_col.append(k)
                 ref_val.append(val)
         
         # fill (partial) keys
         
         # arbitrary key
+        key_val = []
         if len(keys) > 0:
             key_val = generateKey(table, column_names, keys)
-            should_be_unique = "".join(key_val)
-#         else:
-#             print("WTF", table_name) #it is strainge to have no key
+            str_key_val = [str(k) for k in key_val]
+            should_be_unique = "".join(str_key_val)
             
         # partial key
         par_val_str = ""
@@ -319,31 +327,47 @@ for table_name in tables.keys():
             for k in part_k:
                 val = ref_val[ref_col.index(k)]
                 par_val.append(val)
-            par_val_str = "".join(par_val)
+            str_par_val = [str(p) for p in par_val]
+            par_val_str = "".join(str_par_val)
         
         # check uniquety
-        
         if len(keys) > 0 and table_name in BD.keys():
             while should_be_unique + par_val_str in BD[table_name]["FULL_KEY"]:
-                should_be_unique = "".join(generateKey(table, column_names, keys))
+                key_val = generateKey(table, column_names, keys)
+                str_key_val = [str(k) for k in key_val]
+                should_be_unique = "".join(str_key_val)
                 
+        
         # fill secondary columns
         functions = []
-        k_counter = 0
+        col_n = []
+        
         for column in table: # TODO: drop if key
-            if column[0] not in keys:
+            if (column[0] not in keys) and (column[0] not in ref_col):
                 val = getValueToInsert(column)
-                functions.append(str(val))
-            else:
-                functions.append(key_val[k_counter])
-                k_counter += 1
+                functions.append(val)
+                col_n.append(column[0])
             
         # create one more insertion instruction      
         appendInsert(table_name, 
-                     column_names+ref_col+part_k+["FULL_KEY"], 
-                     functions+ref_val+par_val+[should_be_unique+par_val_str])
+                     keys+col_n+ref_col+["FULL_KEY"], 
+                     key_val+functions+ref_val+[should_be_unique+par_val_str])
+
+
 
 # Printing the output to a file
 out_file = open("fill.sql", "w")
 out_file.write(MAIN_STR)
 out_file.close()
+
+
+# ## References
+# 
+# - [names generator](https://treyhunner.com/2013/02/random-name-generator/)
+# - [lib for regexp generator](https://github.com/asciimoo/exrex)
+# - [datetime](https://docs.python.org/3/library/datetime.html)
+# - [random date generation](https://cmsdk.com/python/generate-a-random-date-between-two-other-dates.html)
+
+
+
+
