@@ -2,6 +2,7 @@
 # coding: utf-8
 
 # # Generation of SQL code to fill BD
+
 import re
 import names
 import string 
@@ -14,73 +15,65 @@ import numpy as np
 file = open("tablesUpdate.sql", "r")
 full_text = file.read()
 
+def getOutOfBraces(string):
+    words = string.split("(")[1].split(")")[0]
+    words = words.split(",")
+    words = [re.sub(r"\s+", "", w) for w in words]
+    return words
+
 commands = full_text.split(";")
 tables = {}
 
+create_expr = re.compile("CREATE TABLE")
 primary_key_expr = re.compile("PRIMARY KEY")
-partial_key_expr = re.compile("FOREIGN KEY")
+foreign_key_expr = re.compile("FOREIGN KEY")
 reference_expr = re.compile("REFERENCES")
+usual_expr = re.compile("NOT NULL")
         
 for command in commands:
-    try:
-        table_name = command.split("CREATE TABLE")[1].split()[0]
-    except:
+    if not create_expr.search(command):
         continue
         
-    comma_sep = command.split("NOT NULL,")
-    last = comma_sep[-1]
-    comma_sep = comma_sep[:-1]
-    comma_sep += last.split("),")
-
-    first_sub_expr = comma_sep[0].split(table_name)[1]
-    comma_sep[0] = re.sub(r"^\s+", "", first_sub_expr)[1:] # first brace removed
+    table_name = command.split("CREATE TABLE")[1].split()[0]        
+    lines = command.split("\n")[1:-1] # remove CREATE( and ); lines
 
     table_col = []
     prim_keys = []
-    partial_keys = []
-    ref = {}          # column_name: TABLE_before
+    ref = {}          # column_name: TABLE_before, column name in it
     
-    for cs in comma_sep:
-        cs = re.sub(r"^\s+", "", cs) # break by space
-        splited = cs.split()[:2]
-        
-        
-        if primary_key_expr.search(cs):
-            prim_keys_str = cs.split("(")[1].split(")")[0]
-            prim_keys = prim_keys_str.split(",")
-    
-            prim_keys = [re.sub(r"\s+", "", pk) for pk in prim_keys]
-        
-        elif reference_expr.search(cs):
-              
-            arr = cs.split("REFERENCES")[1].split("(")
-            ref_table = re.sub(r"\s+", "", arr[0])        # the name of table to search in
-            ref_columns = arr[1].split(")")[0].split(",") # column(s) name(s) to search for
-            ref_columns = [re.sub(r"\s+", "", rc) for rc in ref_columns]
+    for cs in lines:
+        cs = cs.strip() # remove tabs and spaces around
+        if len(cs) < 3 or create_expr.search(cs):
+            continue
+        if primary_key_expr.search(cs):                                # key
+            prim_keys = getOutOfBraces(cs)
             
-            # add to dictionary
-            for ref_column in ref_columns:
-                ref[ref_column] = ref_table
+        elif reference_expr.search(cs):                                # reference
+            ref_spl = cs.split("REFERENCES") 
+            ref_column_base  = ref_spl[1].split()[0].split("(")[0]
+            ref_columns = getOutOfBraces(ref_spl[1])
+            
+            ref_to = []
+            if foreign_key_expr.search(cs):
+                ref_to = getOutOfBraces(ref_spl[0])
+            else:
+                ref_to.append(cs.split()[0])
+                table_col += [cs.split()[:2]]
+            
+            for i in range(len(ref_columns)):
+                ref[ref_to[i]] = [ref_column_base, ref_columns[i]]
                 
-            # add to array of exclusions
-            if partial_key_expr.search(cs):
-                partial_keys = ref_columns
-            else: # add such column
-                table_col += [cs.split("REFERENCES")[0].split()[:2]]
-                
-        else:
-            table_col += [splited]
-        
-    tables[table_name] = {"columns":table_col, 
-                          "keys":prim_keys, 
-                          "partial_keys": partial_keys, 
-                          "ref": ref}
+        else:                                                         # usual
+            table_col += [cs.split()[:2]]
+    tables[table_name] = {"columns":table_col.copy(), 
+                          "keys":prim_keys.copy(), 
+                          "ref": ref.copy()}
 
 # parameters of random generation
-MIN_YEAR = 1950
+MIN_YEAR = 1990
 
-MIN_DOB = "1950-01-01"
-MAX_DOB = "1995-01-01"
+MIN_DOB = "1990-01-01"
+MAX_DOB = "1990-01-01"
 
 MIN_ROOM = 100
 MAX_ROOM = 450
@@ -137,6 +130,13 @@ def getRandomDateTime(start=MIN_DOB+" 00:00:00", end=MAX_DOB+" 00:00:00"):
     random_date = start + (end - start) * random.random()
     return random_date.isoformat(" ", "seconds")
     
+def getDOB():
+    '''
+    Returns DOB in format
+    2018-08-21
+    '''
+    return getRandomDate("1950-01-01", "2002-01-01")
+
 def getRandomString(length=64):
     '''
     Returns random string with multiple words 
@@ -168,11 +168,14 @@ def getRandomMoney():
     '''
     return np.random.randint(0, 10**6)/100
 
+# dictionary of predefined fucions for some freuent column names
+
+
 special_types = {"name":     lambda: getRandomName(), 
                  "surname":  lambda: getRandomSurname(), 
                  "email":    lambda: getRandomEmail(), 
                  "phone":    lambda: str(getRandomPhone()),
-                 "SSN":      lambda: str(np.random.randint(10**8, 10**9)),                   # 8 digits long
+                 "SSN":      lambda: str(np.random.randint(10**8, 10**9)),                  # 8 digits long
                  "medical_insurence_number": lambda: np.random.randint(10**15, 10**16),      # 16 digits long
                  "year":     lambda: str(np.random.randint(MIN_YEAR, 2019)), 
                  "season":   lambda: np.random.randint(1, 5), 
@@ -183,6 +186,7 @@ special_types = {"name":     lambda: getRandomName(),
                  "login":    lambda: getRandomStringNoSpace(16), 
                  "password": lambda: getRandomStringNoSpace(16),
                  "add_fire_flag": lambda: np.random.randint(0, 1),
+                 "date_of_birth": lambda: getDOB()
                 }
 
 # dictionary for includes
@@ -192,10 +196,9 @@ include_types = {"DATE":     lambda: str(getRandomDate()),
                  "MONEY":    lambda: getRandomMoney()
                 }
 
-
-
 MAIN_STR = ""
 BD = {} # yes, it's possible to create even worse
+mentioned_tables = {}
 
 def appendInsert(tableName, columns, values):
     '''
@@ -218,6 +221,7 @@ def appendInsert(tableName, columns, values):
     
     str_columns, str_rows = ", ".join(columns[:-1]), ", ".join(values[:-1])
     MAIN_STR += 'INSERT INTO {}({})\nVALUES ({});\n\n'.format(tableName, str_columns, str_rows)
+
 
 def getValueToInsert(column):
     
@@ -258,108 +262,87 @@ def getValueToInsert(column):
         print ("Alert!", column, key)
     return val
 
+def getRefVal(refs_k):
+    '''
+    k - referene column name
+    '''
+    ref_table_name, ref_column_name  = refs_k
+    
+    global BD
+    global mentioned_tables
+    
+    bd_column = BD[ref_table_name][ref_column_name]
+    if ref_table_name not in mentioned_tables.keys():
+        row_index = np.random.randint(0, len(column)-1)
+        mentioned_tables[ref_table_name] = row_index
+
+    return bd_column[mentioned_tables[ref_table_name]]
 
 # introduction to KOSTILI:
 # in any table ther is a column FULL_KEY (reserved column name), with stucked key values
-def generateKey(table, column_names, keys):
+def generateKey(table, column_names, k, refs):
     '''
-    Returns the array of possible 
-    values of the key attribures
+    Return a key
     
     Warning: not garanteed to be unique
     '''
-    key_val = []
-    for k in keys:
-        val = getValueToInsert([k, table[column_names.index(k)][1]])
-        key_val.append(val)
-    return key_val
+    if k in refs.keys(): # if the geven key was referenced
+        return getRefVal(refs[k])
+    else:
+        return getValueToInsert([k, table[column_names.index(k)][1]])
 
+def generateKeys(table, column_names, keys, refs):
+    '''
+    Genereats array of all keys
+    '''
+    return [generateKey(table, column_names, k, refs) for k in keys]
 
 for table_name in tables.keys():
     # data for table     
     
     table = tables[table_name]["columns"]
     column_names = [column[0] for column in table] # names of usuall columns + partial_keys
-    
+    keys = tables[table_name]["keys"]
+
     refs = tables[table_name]["ref"]
-    all_keys = tables[table_name]["keys"]
+    ref_col = [ rk for rk in refs.keys() if rk not in keys]
     
-    keys = []
-    for k in all_keys:
-        if k not in refs.keys():
-            keys.append(k)
-            
-    part_k = tables[table_name]["partial_keys"]
     
-    for row in range(100):
+    for row in range(200):
         
         # fill connected columns
-        ref_col, ref_val = [], []
-        if len(refs) > 0:
-            # in case when many referencing values are from the same column
-            mentioned_tables = {}
-            for k in refs.keys():
-                
-                ref_table_name = refs[k]
-                
-                if ref_table_name not in mentioned_tables.keys():
-                    row_index = np.random.randint(0, len(BD[ref_table_name][k])-1)
-                    mentioned_tables[ref_table_name] = row_index
-                
-                val = BD[ref_table_name][k][mentioned_tables[ref_table_name]]
-                    
-                ref_col.append(k)
-                ref_val.append(val)
+        ref_val = [getRefVal(refs[k]) for k in ref_col]
         
-        # fill (partial) keys
-        
-        # arbitrary key
-        key_val = []
-        if len(keys) > 0:
-            key_val = generateKey(table, column_names, keys)
-            str_key_val = [str(k) for k in key_val]
-            should_be_unique = "".join(str_key_val)
-            
-        # partial key
-        par_val_str = ""
-        par_val = []
-        if len(part_k) > 0:
-            for k in part_k:
-                val = ref_val[ref_col.index(k)]
-                par_val.append(val)
-            str_par_val = [str(p) for p in par_val]
-            par_val_str = "".join(str_par_val)
+        # keys
+        key_val = generateKeys(table, column_names, keys, refs)
+        str_key_val = [str(k) for k in key_val]
+        should_be_unique = "".join(str_key_val)
         
         # check uniquety
-        if len(keys) > 0 and table_name in BD.keys():
-            while should_be_unique + par_val_str in BD[table_name]["FULL_KEY"]:
-                key_val = generateKey(table, column_names, keys)
-                str_key_val = [str(k) for k in key_val]
-                should_be_unique = "".join(str_key_val)
-                
+        is_uinque = (table_name in BD.keys()) 
+        is_uinque = is_uinque and (should_be_unique in BD[table_name]["FULL_KEY"])
+        if is_uinque:
+            continue # enough values are generated to skip some of them
         
         # fill secondary columns
         functions = []
         col_n = []
+
+        for column in table: 
+            if column[0] in keys+ref_col:
+                continue    
+            functions.append(getValueToInsert(column))
+            col_n.append(column[0])
         
-        for column in table: # TODO: drop if key
-            if (column[0] not in keys) and (column[0] not in ref_col):
-                val = getValueToInsert(column)
-                functions.append(val)
-                col_n.append(column[0])
-            
         # create one more insertion instruction      
         appendInsert(table_name, 
                      keys+col_n+ref_col+["FULL_KEY"], 
-                     key_val+functions+ref_val+[should_be_unique+par_val_str])
-
-
+                     key_val+functions+ref_val+[should_be_unique])
 
 # Printing the output to a file
 out_file = open("fill.sql", "w")
 out_file.write(MAIN_STR)
 out_file.close()
-
 
 # ## References
 # 
@@ -367,7 +350,4 @@ out_file.close()
 # - [lib for regexp generator](https://github.com/asciimoo/exrex)
 # - [datetime](https://docs.python.org/3/library/datetime.html)
 # - [random date generation](https://cmsdk.com/python/generate-a-random-date-between-two-other-dates.html)
-
-
-
 
