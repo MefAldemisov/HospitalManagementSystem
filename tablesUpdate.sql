@@ -19,6 +19,26 @@ CREATE TABLE HeadOfDepartment (
 	email VARCHAR(16) REFERENCES EmployeeAccount(email)
 );
 
+
+CREATE TABLE Department (
+	department_name VARCHAR(512) NOT NULL,
+	CONSTRAINT pk_Department PRIMARY KEY (
+		department_name
+	 )
+);
+
+CREATE TABLE ManageDepartment (
+	department_name VARCHAR(512) NOT NULL,
+	headOfDepartment_SSN VARCHAR(9) NOT NULL,
+	CONSTRAINT pk_ManageDepartment PRIMARY KEY (
+		department_name, headOfDepartment_SSN
+	),
+	CONSTRAINT fk_DepartmentName FOREIGN KEY (department_name) 
+								 REFERENCES Department(department_name),
+	CONSTRAINT fk_HeadOfDepSSN FOREIGN KEY (headOfDepartment_SSN) 
+								 REFERENCES HeadOfDepartment(headOfDepartment_SSN)
+);
+
 CREATE TABLE PatientAccount (
 	password VARCHAR(16) NOT NULL,
 	surname VARCHAR(64) NOT NULL,
@@ -39,7 +59,7 @@ CREATE TABLE TaskOfToDoList (
 	task_status BOOLEAN NOT NULL,
 	email VARCHAR(16) NOT NULL,
 	CONSTRAINT pk_TaskOfToDoList PRIMARY KEY (
-		task_title
+		task_title, email
 	 ),
 	CONSTRAINT fk_TaskOfToDoList_task_title FOREIGN KEY(email)
 											REFERENCES EmployeeAccount (email)
@@ -48,12 +68,13 @@ CREATE TABLE TaskOfToDoList (
 CREATE TABLE ManageTask (
 	manage_task_change_log VARCHAR(256) NOT NULL,
 	manage_task_timestamp TIMESTAMP NOT NULL,
-	task_title VARCHAR(512) REFERENCES TaskOfToDoList(task_title),
-	email VARCHAR(16) REFERENCES EmployeeAccount(email),
-	CONSTRAINT fk_task_of_todo_list FOREIGN KEY(task_title)
-											REFERENCES TaskOfToDoList (task_title),
-	CONSTRAINT fk_employee_account_manage_task FOREIGN KEY(email)
-											REFERENCES EmployeeAccount (email)
+	task_title VARCHAR(512) NOT NULL,
+	email VARCHAR(16) NOT NULL,
+	CONSTRAINT pk_ManageTask PRIMARY KEY (
+		task_title, email
+	),
+	CONSTRAINT fk_task_of_todo_list FOREIGN KEY(task_title, email)
+											REFERENCES TaskOfToDoList (task_title, email)
 );
 
 CREATE TABLE Security (
@@ -67,7 +88,10 @@ CREATE TABLE Security (
 CREATE TABLE SendMessage (
 	message_text VARCHAR(2048) NOT NULL,
 	title VARCHAR(512) NOT NULL,
-	email VARCHAR(16) REFERENCES EmployeeAccount(email),
+	email VARCHAR(16) NOT NULL,
+	CONSTRAINT pk_SendMessage PRIMARY KEY (
+		message_text, title, email
+	),
 	CONSTRAINT fk_employee_account_send_message FOREIGN KEY(email)
 											REFERENCES EmployeeAccount (email)
 );
@@ -86,6 +110,9 @@ CREATE TABLE AddFire (
 	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN),
 	hr_SSN VARCHAR(9) REFERENCES HR(hr_SSN),
 	email VARCHAR(16) REFERENCES EmployeeAccount(email),
+	CONSTRAINT pk_AddFire PRIMARY KEY (
+		hr_SSN, headOfDepartment_SSN, email, add_fire_flag
+	 ),
 	CONSTRAINT fk_employee_account_add_fire FOREIGN KEY(email)
 											REFERENCES EmployeeAccount (email),
 	CONSTRAINT fk_head_of_department_add_fire FOREIGN KEY(headOfDepartment_SSN)
@@ -116,7 +143,7 @@ CREATE TABLE Notice (
 	year VARCHAR(4) NOT NULL,
 	content VARCHAR(2048) NOT NULL,
 	CONSTRAINT pk_Notice PRIMARY KEY (
-		title,season,year
+		title, season, year
 	),
 	CONSTRAINT fk_Notice_title FOREIGN KEY(season,year) 
 							   REFERENCES Noticeboard (season,year)
@@ -125,9 +152,12 @@ CREATE TABLE Notice (
 CREATE TABLE EditNotice (
 	edit_notice_change_log VARCHAR(256) NOT NULL,
 	edit_notice_timestamp TIMESTAMP NOT NULL,
-	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN),
+	headOfDepartment_SSN VARCHAR(9) NOT NULL,
 	season SMALLINT NOT NULL,
 	year VARCHAR(4) NOT NULL,
+	CONSTRAINT pk_EditNotice PRIMARY KEY (
+		headOfDepartment_SSN, season, year, edit_notice_timestamp
+	),
 	CONSTRAINT fk_head_of_department_edit_notice FOREIGN KEY(headOfDepartment_SSN)
 											REFERENCES HeadOfDepartment (headOfDepartment_SSN),
 	CONSTRAINT fk_noticeboard_edit_notice FOREIGN KEY(season,year)
@@ -146,9 +176,12 @@ CREATE TABLE StaffsTimetable (
 CREATE TABLE EditStaffsTimetable (
 	edit_staffs_timetable_change_log VARCHAR(256) NOT NULL,
 	edit_staffs_timetable_timestamp TIMESTAMP NOT NULL,
-	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN),
+	headOfDepartment_SSN VARCHAR(9) NOT NULL,
     year VARCHAR(4) NOT NULL,
 	month SMALLINT NOT NULL,
+	CONSTRAINT pk_EditStaffsTimetable PRIMARY KEY (
+		year, month, headOfDepartment_SSN, edit_staffs_timetable_timestamp
+	 ),
 	CONSTRAINT fk_head_of_department_edit_staffs_timetable FOREIGN KEY(headOfDepartment_SSN)
 											REFERENCES HeadOfDepartment (headOfDepartment_SSN),
 	CONSTRAINT fk_staffs_timetable_edit_staffs_timetable FOREIGN KEY(year, month)
@@ -156,10 +189,13 @@ CREATE TABLE EditStaffsTimetable (
 );
 
 CREATE TABLE SendRequest (
-	status BOOLEAN NOT NULL,
+	request_status BOOLEAN NOT NULL,
 	purpose VARCHAR(512) NOT NULL,
 	request_timestamp TIMESTAMP NOT NULL,
 	email VARCHAR(16) REFERENCES EmployeeAccount(email),
+	CONSTRAINT pk_SendRequest PRIMARY KEY (
+		email, request_timestamp, request_status
+	 ),
 	CONSTRAINT fk_employee_account_send_request FOREIGN KEY(email)
 											REFERENCES EmployeeAccount (email)
 );
@@ -186,9 +222,12 @@ CREATE TABLE Inventory (
 CREATE TABLE ManageInventory (
 	manage_inventory_change_log VARCHAR(256) NOT NULL,
 	manage_inventory_timestamp TIMESTAMP NOT NULL,
-	warehouseManager_SSN VARCHAR(9) REFERENCES WarehouseManager(warehouseManager_SSN),
+	warehouseManager_SSN VARCHAR(9) NOT NULL,
 	inventory_code INTEGER NOT NULL,
 	inventory_name VARCHAR(256) NOT NULL,
+	CONSTRAINT pk_ManageInventory PRIMARY KEY (
+		inventory_code, inventory_name, warehouseManager_SSN, manage_inventory_timestamp
+	 ),
 	CONSTRAINT fk_warehouse_manager_manage_inventory FOREIGN KEY(warehouseManager_SSN)
 											REFERENCES WarehouseManager (warehouseManager_SSN),
 	CONSTRAINT fk_inventory_manage_inventory FOREIGN KEY(inventory_code, inventory_name)
@@ -221,7 +260,7 @@ CREATE TABLE Doctor (
 		doctor_SSN
 	 ),
 	email VARCHAR(16) REFERENCES EmployeeAccount(email),
-	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN)
+	department_name VARCHAR(512) REFERENCES Department(department_name)
 );
 
 CREATE TABLE MedicalReport (
@@ -248,6 +287,9 @@ CREATE TABLE ManageEmployeeAccount (
 	manage_employee_account_timestamp TIMESTAMP NOT NULL,
 	email VARCHAR(16) REFERENCES EmployeeAccount(email),
 	itSpecialist_SSN VARCHAR(9) REFERENCES ITSpecialist(itSpecialist_SSN),
+	CONSTRAINT pk_ManageEmployeeAccount PRIMARY KEY (
+		email, itSpecialist_SSN, manage_employee_account_timestamp
+	 ),
 	CONSTRAINT fk_employee_account_manage_employee_account FOREIGN KEY(email)
 											REFERENCES EmployeeAccount (email),
 	CONSTRAINT fk_it_specialist_manage_employee_account FOREIGN KEY(itSpecialist_SSN)
@@ -256,9 +298,12 @@ CREATE TABLE ManageEmployeeAccount (
 
 CREATE TABLE Contacts (
 	contacts_timestamp TIMESTAMP NOT NULL,
-	message VARCHAR(2048) NOT NULL,
+	contacts_message VARCHAR(2048) NOT NULL,
 	medical_insurence_number BIGINT REFERENCES PatientAccount(medical_insurence_number),
 	itSpecialist_SSN VARCHAR(9) REFERENCES ITSpecialist(itSpecialist_SSN),
+	CONSTRAINT pk_Contacts PRIMARY KEY (
+		medical_insurence_number, itSpecialist_SSN, contacts_timestamp
+	 ),
 	CONSTRAINT fk_it_specialist_contacts FOREIGN KEY(itSpecialist_SSN)
 											REFERENCES ITSpecialist (itSpecialist_SSN),
 	CONSTRAINT fk_patient_account_contacts FOREIGN KEY(medical_insurence_number)
@@ -273,15 +318,6 @@ CREATE TABLE CreateRecipe (
 	 ),
 	doctor_SSN VARCHAR(9) REFERENCES Doctor(doctor_SSN),
 	medical_insurence_number BIGINT REFERENCES PatientAccount(medical_insurence_number)
-);
-
-CREATE TABLE Department (
-	department_name VARCHAR(512) NOT NULL,
-	CONSTRAINT pk_Department PRIMARY KEY (
-		department_name
-	 ),
-	doctor_SSN VARCHAR(9) REFERENCES Doctor(doctor_SSN),
-	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN)
 );
 
 CREATE TABLE PatientTimetable (
@@ -300,6 +336,9 @@ CREATE TABLE EditPatientTimetable (
 	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN),
 	year VARCHAR(4) NOT NULL,
 	month SMALLINT NOT NULL,
+	CONSTRAINT pk_EditPatientTimetable PRIMARY KEY (
+		year,month, headOfDepartment_SSN, edit_patient_timetable_timestamp
+	 ),
 	CONSTRAINT fk_head_of_department_edit_patient_timetable FOREIGN KEY(headOfDepartment_SSN)
 											REFERENCES HeadOfDepartment (headOfDepartment_SSN),
 	CONSTRAINT fk_patient_timetable_edit_patient_timetable FOREIGN KEY(year, month)
@@ -309,13 +348,13 @@ CREATE TABLE EditPatientTimetable (
 CREATE TABLE CreateAppointment (
 	appointment_timestamp TIMESTAMP NOT NULL,
 	room SMALLINT NOT NULL,
-	CONSTRAINT pk_CreateAppointment PRIMARY KEY (
-		appointment_timestamp
-	 ),
 	medical_insurence_number BIGINT REFERENCES PatientAccount(medical_insurence_number),
 	doctor_SSN VARCHAR(9) REFERENCES Doctor(doctor_SSN),
 	year VARCHAR(4) NOT NULL,
 	month SMALLINT NOT NULL,
+	CONSTRAINT pk_CreateAppointment PRIMARY KEY (
+		appointment_timestamp, year, month, medical_insurence_number, doctor_SSN
+	 ),
 	CONSTRAINT fk_patient_timetable_create_appointment FOREIGN KEY(year, month)
 											REFERENCES PatientTimetable (year, month)
 );
@@ -345,6 +384,9 @@ CREATE TABLE ManageMedicine (
 	manage_medicine_timestamp TIMESTAMP NOT NULL,
 	pharmacist_SSN VARCHAR(9) REFERENCES Pharmacist(pharmacist_SSN),
 	medicine_id VARCHAR(16) REFERENCES Medicine(medicine_id),
+	CONSTRAINT pk_ManageMedicine PRIMARY KEY (
+		medicine_id, pharmacist_SSN, manage_medicine_timestamp
+	 ),
 	CONSTRAINT fk_pharmacist_manage_medicine FOREIGN KEY(pharmacist_SSN)
 											REFERENCES Pharmacist (pharmacist_SSN),
 	CONSTRAINT fk_medicine_manage_medicine FOREIGN KEY(medicine_id)
@@ -356,6 +398,9 @@ CREATE TABLE ChangePrice (
 	change_price_timestamp TIMESTAMP NOT NULL,
 	headOfDepartment_SSN VARCHAR(9) REFERENCES HeadOfDepartment(headOfDepartment_SSN),
 	medicine_id VARCHAR(16) REFERENCES Medicine(medicine_id),
+	CONSTRAINT pk_ChangePrice PRIMARY KEY (
+		medicine_id, headOfDepartment_SSN, change_price_timestamp
+	 ),
 	CONSTRAINT fk_medicine_change_price FOREIGN KEY(medicine_id)
 											REFERENCES Medicine (medicine_id),
 	CONSTRAINT fk_head_of_department_change_price FOREIGN KEY(headOfDepartment_SSN)
@@ -389,6 +434,9 @@ CREATE TABLE ManageBill (
 	financial_SSN VARCHAR(9) REFERENCES Financial(financial_SSN),
 	from_id INTEGER NOT NULL,
 	to_id INTEGER NOT NULL,
+	CONSTRAINT pk_ManageBill PRIMARY KEY (
+		from_id, to_id, financial_SSN, manage_bill_timestamp
+	 ),
 	CONSTRAINT fk_financial_manage_bill FOREIGN KEY(financial_SSN)
 											REFERENCES Financial (financial_SSN),
 	CONSTRAINT fk_bill_manage_bill FOREIGN KEY(from_id, to_id)
@@ -401,6 +449,9 @@ CREATE TABLE RequestForMeds (
 	meds_request_timestamp TIMESTAMP NOT NULL,
 	medical_insurence_number BIGINT REFERENCES PatientAccount(medical_insurence_number),
 	pharmacist_SSN VARCHAR(9) REFERENCES Pharmacist(pharmacist_SSN),
+	CONSTRAINT pk_RequestForMeds PRIMARY KEY (
+		meds_request_timestamp, pharmacist_SSN, medical_insurence_number
+	 ),
 	CONSTRAINT fk_patient_account_request_for_meds FOREIGN KEY(medical_insurence_number)
 											REFERENCES PatientAccount (medical_insurence_number),
 	CONSTRAINT fk_pharmacist_request_for_meds FOREIGN KEY(pharmacist_SSN)
