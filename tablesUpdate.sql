@@ -348,15 +348,19 @@ CREATE TABLE EditPatientTimetable (
 CREATE TABLE CreateAppointment (
 	appointment_timestamp TIMESTAMP NOT NULL,
 	room SMALLINT NOT NULL,
-	medical_insurence_number BIGINT REFERENCES PatientAccount(medical_insurence_number),
-	doctor_SSN VARCHAR(9) REFERENCES Doctor(doctor_SSN),
+	medical_insurence_number BIGINT NOT NULL,
+	doctor_SSN VARCHAR(9) NOT NULL,
 	year VARCHAR(4) NOT NULL,
 	month SMALLINT NOT NULL,
 	CONSTRAINT pk_CreateAppointment PRIMARY KEY (
 		appointment_timestamp, year, month, medical_insurence_number, doctor_SSN
 	 ),
 	CONSTRAINT fk_patient_timetable_create_appointment FOREIGN KEY(year, month)
-											REFERENCES PatientTimetable (year, month)
+											REFERENCES PatientTimetable (year, month),
+	CONSTRAINT fk_doctorSSN FOREIGN KEY(doctor_SSN)
+							REFERENCES Doctor(doctor_SSN),
+	CONSTRAINT fk_medical_insurence_number FOREIGN KEY(medical_insurence_number) 
+							REFERENCES PatientAccount(medical_insurence_number)
 );
 
 CREATE TABLE Pharmacist (
