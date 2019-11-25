@@ -9,3 +9,14 @@
 - [ ] Create interface
 - [ ] Convert to MySQL
 
+## How to run instruction
+
+```java
+blblblblblbl> sudo -i -u postgres
+~$ psql
+postgres=# CREATE DATABASE Hospital;
+postgres=# \c hospital
+postgres=# \i '/home/.....//HospitalManagementSystem/tablesUpdate.sql'
+postgres=# \i '/home/.....//HospitalManagementSystem/fill.sql'
+```
+Now you can try your `SELECT` statement!
