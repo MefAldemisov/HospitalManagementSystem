@@ -54,7 +54,7 @@ CREATE TABLE ManageTask (
 	manage_task_timestamp TIMESTAMP NOT NULL,
 	task_title VARCHAR(512) NOT NULL,
 	email VARCHAR(16) NOT NULL,
-	CONSTRAINT pk_ManageTask PRIMARY KEY (task_title, email),
+	CONSTRAINT pk_ManageTask PRIMARY KEY (task_title, email, manage_task_timestamp),
 	CONSTRAINT fk_task_of_todo_list FOREIGN KEY(task_title, email) REFERENCES TaskOfToDoList (task_title, email)
 );
 
