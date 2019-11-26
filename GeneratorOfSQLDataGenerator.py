@@ -68,12 +68,13 @@ for command in commands:
     tables[table_name] = {"columns":table_col.copy(), 
                           "keys":prim_keys.copy(), 
                           "ref": ref.copy()}
+    
 
 # parameters of random generation
 MIN_YEAR = 1990
 
 MIN_DOB = "1990-01-01"
-MAX_DOB = "1990-01-01"
+MAX_DOB = "2019-01-01"
 
 MIN_ROOM = 100
 MAX_ROOM = 450
@@ -168,6 +169,7 @@ def getRandomMoney():
     '''
     return np.random.randint(0, 10**6)/100
 
+
 # dictionary of predefined fucions for some freuent column names
 
 
@@ -196,6 +198,50 @@ include_types = {"DATE":     lambda: str(getRandomDate()),
                  "MONEY":    lambda: getRandomMoney()
                 }
 
+amounts = {
+    "EmployeeAccount": 1000,
+    "HeadOfDepartment": 10,
+    "Department": 8,
+    "ManageDepartment": 100,
+    "PatientAccount": 1000,
+    "TaskOfToDoList": 2000,
+    "ManageTask": 11000,
+    "Security": 10,
+    "SendMessage": 2000,
+    "HR": 5,
+    "AddFire": 500,
+    "Cleaning": 20,
+    "Noticeboard": 100,
+    "Notice": 100,
+    "EditNotice": 200,
+    "StaffsTimetable": 100,
+    "EditStaffsTimetable": 150,
+    "SendRequest": 50,
+    "WarehouseManager": 2,
+    "Inventory": 300,
+    "ManageInventory": 400,
+    "Feedback": 40,
+    "Nurse": 200,
+    "Doctor": 400,
+    "MedicalReport": 10000,
+    "ITSpecialist": 5,
+    "ManageEmployeeAccount": 400,
+    "Contacts": 300,
+    "CreateRecipe": 2000,
+    "PatientTimetable": 100,
+    "EditPatientTimetable": 100, 
+    "CreateAppointment": 10000,
+    "Pharmacist": 5,
+    "Medicine": 100,
+    "ManageMedicine": 300,
+    "ChangePrice": 10,
+    "Financial": 10,
+    "Bill": 100,
+    "ManageBill": 120,
+    "RequestForMeds": 50
+}
+
+
 MAIN_STR = ""
 BD = {} # yes, it's possible to create even worse
 mentioned_tables = {}
@@ -221,7 +267,7 @@ def appendInsert(tableName, columns, values):
     
     str_columns, str_rows = ", ".join(columns[:-1]), ", ".join(values[:-1])
     MAIN_STR += 'INSERT INTO {}({})\nVALUES ({});\n\n'.format(tableName, str_columns, str_rows)
-
+    
 
 def getValueToInsert(column):
     
@@ -273,10 +319,11 @@ def getRefVal(refs_k):
     
     bd_column = BD[ref_table_name][ref_column_name]
     if ref_table_name not in mentioned_tables.keys():
-        row_index = np.random.randint(0, len(column)-1)
+        row_index = np.random.randint(0, len(bd_column)-1)
         mentioned_tables[ref_table_name] = row_index
 
     return bd_column[mentioned_tables[ref_table_name]]
+
 
 # introduction to KOSTILI:
 # in any table ther is a column FULL_KEY (reserved column name), with stucked key values
@@ -297,6 +344,7 @@ def generateKeys(table, column_names, keys, refs):
     '''
     return [generateKey(table, column_names, k, refs) for k in keys]
 
+
 for table_name in tables.keys():
     # data for table     
     
@@ -307,12 +355,11 @@ for table_name in tables.keys():
     refs = tables[table_name]["ref"]
     ref_col = [ rk for rk in refs.keys() if rk not in keys]
     
-    
-    for row in range(200):
+    for row in range(amounts[table_name]):
+        mentioned_tables = {}
         
         # fill connected columns
         ref_val = [getRefVal(refs[k]) for k in ref_col]
-        
         # keys
         key_val = generateKeys(table, column_names, keys, refs)
         str_key_val = [str(k) for k in key_val]
@@ -333,7 +380,7 @@ for table_name in tables.keys():
                 continue    
             functions.append(getValueToInsert(column))
             col_n.append(column[0])
-        
+              
         # create one more insertion instruction      
         appendInsert(table_name, 
                      keys+col_n+ref_col+["FULL_KEY"], 
@@ -344,10 +391,15 @@ out_file = open("fill.sql", "w")
 out_file.write(MAIN_STR)
 out_file.close()
 
+
 # ## References
 # 
 # - [names generator](https://treyhunner.com/2013/02/random-name-generator/)
 # - [lib for regexp generator](https://github.com/asciimoo/exrex)
 # - [datetime](https://docs.python.org/3/library/datetime.html)
 # - [random date generation](https://cmsdk.com/python/generate-a-random-date-between-two-other-dates.html)
+
+
+
+
 
