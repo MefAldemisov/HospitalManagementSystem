@@ -1,13 +1,13 @@
 WITH 
 apps AS (SELECT *
 		 FROM CreateAppointment AS ca
-		 WHERE EXTRACT(YEAR FROM ca.appointment_timestamp::timestamp::date)=2018),
+		 WHERE EXTRACT(YEAR FROM ca.appointment_timestamp::timestamp::date)=2019),
 old_min AS (SELECT medical_insurence_number
 		FROM PatientAccount AS pa
-		WHERE 2018-EXTRACT(YEAR FROM pa.date_of_birth::date)>=50),
+		WHERE pa.date_of_birth::date >= current_date - interval '50 years'),
 young_min AS (SELECT medical_insurence_number 
 		 FROM PatientAccount AS pa
-		 WHERE 2018-EXTRACT(YEAR FROM pa.date_of_birth::date)<50),
+		 WHERE pa.date_of_birth::date < current_date - interval '50 years'),
 months AS (SELECT DISTINCT EXTRACT(MONTH 
 								   FROM apps.appointment_timestamp::timestamp) AS val
 		   FROM apps
