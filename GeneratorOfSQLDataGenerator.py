@@ -73,7 +73,7 @@ for command in commands:
 # parameters of random generation
 MIN_YEAR = 1990
 
-MIN_DOB = "1990-01-01"
+MIN_DOB = "2017-01-01"
 MAX_DOB = "2019-01-01"
 
 MIN_ROOM = 100
@@ -129,6 +129,7 @@ def getRandomDateTime(start=MIN_DOB+" 00:00:00", end=MAX_DOB+" 00:00:00"):
     '''
     start, end = datetime.fromisoformat(start), datetime.fromisoformat(end)
     random_date = start + (end - start) * random.random()
+    random_date = random_date - timedelta(hours=random_date.hour, minutes=random_date.minute%30, seconds=random_date.second) + timedelta(hours=int(random.random()*10+8))
     return random_date.isoformat(" ", "seconds")
     
 def getDOB():
@@ -398,7 +399,6 @@ out_file.close()
 # - [lib for regexp generator](https://github.com/asciimoo/exrex)
 # - [datetime](https://docs.python.org/3/library/datetime.html)
 # - [random date generation](https://cmsdk.com/python/generate-a-random-date-between-two-other-dates.html)
-
 
 
 
