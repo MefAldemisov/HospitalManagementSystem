@@ -6,8 +6,8 @@ app AS (SELECT * -- find all appointments by the date
 		WHERE appointment_timestamp::timestamp::date=
 			(SELECT MAX(appointment_timestamp::timestamp::date)
 			 FROM CreateAppointment
-			 WHERE medical_insurence_number=2576561477010630)
-			 AND medical_insurence_number=2576561477010630),
+			 WHERE medical_insurence_number= 3124645379976567)
+			 AND medical_insurence_number= 3124645379976567),
 acc AS (SELECT email
 		FROM EmployeeAccount
 		WHERE (NOT name SIMILAR TO '(M|L)%' AND surname SIMILAR TO '(M|L)%') OR 
@@ -24,7 +24,7 @@ FROM (	SELECT EXTRACT(WEEK FROM appointment_timestamp) AS week,
  		SUBSTRING(CAST(appointment_timestamp AS TEXT), 12, 5) AS timeslot
 		FROM (	SELECT appointment_timestamp
 				FROM createappointment
-WHERE appointment_timestamp > '2018-11-28 00:00:00'
+WHERE appointment_timestamp::timestamp::date < current_date - interval '1 year'
 			 ) as timestamp_during_year
 		GROUP BY appointment_timestamp
 		ORDER BY week
@@ -35,7 +35,7 @@ COUNT(week) > 1
 ORDER BY timeslot;
 
 -- third
-CREATE VIEW query3 
+CREATE VIEW query3 AS
 SELECT select2.medical_insurence_number FROM
 	(SELECT select1.medical_insurence_number, select1.count, select1.week 
 		FROM (SELECT COUNT(medical_insurence_number) as count,medical_insurence_number, date_trunc('week', appointment_timestamp) as week
@@ -49,7 +49,7 @@ GROUP BY select2.medical_insurence_number
 HAVING COUNT(select2.medical_insurence_number) > 3;
 
 -- fourth
-CREATE VIEW query4
+CREATE VIEW query4 AS
 WITH 
 apps AS (SELECT *
 		 FROM CreateAppointment AS ca
@@ -108,7 +108,7 @@ SELECT  COALESCE(total_group1.a, 0) +
 FROM total_group1,total_group2, total_group3, total_group4;
 
 -- fifth
-CREATE VIEW query5 
+CREATE VIEW query5 AS
 WITH
 app AS 
 	(SELECT * 

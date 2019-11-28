@@ -5,7 +5,7 @@ FROM (	SELECT EXTRACT(WEEK FROM appointment_timestamp) AS week,
  		SUBSTRING(CAST(appointment_timestamp AS TEXT), 12, 5) AS timeslot
 		FROM (	SELECT appointment_timestamp
 				FROM createappointment
-WHERE appointment_timestamp::timestamp::date > current_date
+WHERE appointment_timestamp::timestamp::date < current_date - interval '1 year'
 			 ) as timestamp_during_year
 		GROUP BY appointment_timestamp
 		ORDER BY week
