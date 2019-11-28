@@ -73,7 +73,7 @@ for command in commands:
 # parameters of random generation
 MIN_YEAR = 1990
 
-MIN_DOB = "1990-01-01"
+MIN_DOB = "2008-11-28"
 MAX_DOB = "2019-11-28"
 
 MIN_ROOM = 100
@@ -223,7 +223,7 @@ amounts = {
     "ManageInventory": 400,
     "Feedback": 40,
     "Nurse": 200,
-    "Doctor": 400,
+    "Doctor": 200,
     "MedicalReport": 10000,
     "ITSpecialist": 5,
     "ManageEmployeeAccount": 400,
@@ -231,7 +231,7 @@ amounts = {
     "CreateRecipe": 2000,
     "PatientTimetable": 100,
     "EditPatientTimetable": 100, 
-    "CreateAppointment": 10000,
+    "CreateAppointment": 40000,
     "Pharmacist": 5,
     "Medicine": 100,
     "ManageMedicine": 300,
