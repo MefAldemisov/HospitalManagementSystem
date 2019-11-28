@@ -73,8 +73,8 @@ for command in commands:
 # parameters of random generation
 MIN_YEAR = 1990
 
-MIN_DOB = "2017-01-01"
-MAX_DOB = "2019-01-01"
+MIN_DOB = "1990-01-01"
+MAX_DOB = "2019-11-28"
 
 MIN_ROOM = 100
 MAX_ROOM = 450

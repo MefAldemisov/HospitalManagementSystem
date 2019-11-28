@@ -4,8 +4,8 @@ app AS (SELECT * -- find all appointments by the date
 		WHERE appointment_timestamp::timestamp::date=
 			(SELECT MAX(appointment_timestamp::timestamp::date)
 			 FROM CreateAppointment
-			 WHERE medical_insurence_number=6087649573088168)
-			 AND medical_insurence_number=6087649573088168),
+			 WHERE medical_insurence_number=2576561477010630)
+			 AND medical_insurence_number=2576561477010630),
 acc AS (SELECT email
 		FROM EmployeeAccount
 		WHERE (NOT name SIMILAR TO '(M|L)%' AND surname SIMILAR TO '(M|L)%') OR 
@@ -16,4 +16,4 @@ FROM Doctor JOIN acc ON Doctor.email=acc.email
 			;
 -- SELECT *
 -- FROM PatientAccount
--- WHERE medical_insurence_number=6087649573088168; --Gordy Betty, she is a woman
+-- WHERE medical_insurence_number=8190344823393733; --Chin lisa, she is a woman
