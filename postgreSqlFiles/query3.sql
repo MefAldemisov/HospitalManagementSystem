@@ -7,4 +7,4 @@ SELECT select2.medical_insurence_number FROM
 		HAVING select1.count >=2
 	) as select2
 GROUP BY select2.medical_insurence_number
-HAVING  COUNT(select2.medical_insurence_number) > 3
+HAVING  COUNT(select2.medical_insurence_number) > 3;
