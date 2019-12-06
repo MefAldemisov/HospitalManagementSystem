@@ -8,9 +8,9 @@ app AS (SELECT * -- find all appointments by the date
 			 AND medical_insurence_number= 3124645379976567),
 acc AS (SELECT email
 		FROM EmployeeAccount
-		WHERE (NOT name LIKE '%[ML]%' AND surname LIKE '%[ML]%') OR 
-			  (name LIKE '%[ML]%' AND NOT surname LIKE '%[ML]%'))
-SELECT app.room
+		WHERE (NOT name SIMILAR TO '(M|L)%' AND surname SIMILAR TO '(M|L)%') OR 
+			  (name SIMILAR TO '(M|L)%' AND NOT surname SIMILAR TO '(M|L)%'))
+SELECT app.doctor_ssn
 FROM Doctor JOIN acc ON Doctor.email=acc.email 
 			JOIN app ON Doctor.doctor_ssn=app.doctor_ssn
 			;
